@@ -1,11 +1,11 @@
 import customtkinter as ctk
 from PIL import Image, ImageDraw, ImageOps
-import joblib
 import numpy as np
+import tensorflow as tf
 
 
 # loading model
-model = joblib.load('stacking_clf.pkl')
+model = tf.keras.models.load_model('kaggle/working/handwritten_digit_rec.keras')
 
 root = ctk.CTk()
 root.title("Handwritten Digit Recognition")
@@ -52,13 +52,24 @@ def process_digit():
 
 def predict():
     img_digit = process_digit()
-    np_img = np.array(img_digit).reshape((1, -1))
-    
-    probabilities = {str(i): proba for i, proba in enumerate(model.predict_proba(np_img)[0])}
-    print(probabilities)
+    np_img = np.array(img_digit).reshape(-1, 28, 28, 1) / 255
 
-    prediction = model.predict(np_img)[0]
-    prediction_label.configure(text= f'Prediction: {prediction}')
+    probabilities = model.predict(np_img)[0]
+    print(probabilities.round(2) * 100)
+
+    prediction = probabilities.argmax()
+    pred_proba = probabilities.max()
+
+
+    if pred_proba < 0.50:
+        prediction_label.configure(text= 'Prediction: Random doodle')
+    
+    elif pred_proba < 0.70:
+        prediction_label.configure(text= f'Prediction: {prediction}, but not sure.')
+
+    else:
+        prediction_label.configure(text= f'Prediction: {prediction}')
+
     root.update()
 
 
