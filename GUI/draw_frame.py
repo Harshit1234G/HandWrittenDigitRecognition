@@ -57,7 +57,7 @@ class DrawFrame(ctk.CTkFrame):
         self.noise_slider = self.create_slider_frame(
             label= 'Noise     ',
             from_= 0.0,
-            to= 0.3,
+            to= 0.5,
             variable= self.noise_var,
             command= self.add_noise
         )
@@ -191,13 +191,12 @@ class DrawFrame(ctk.CTkFrame):
         noisy_image = np.clip(noisy_image, 0, 255).astype(np.uint8)
 
         # updating draw_image
-        self.draw_image = Image.fromarray(noisy_image)
+        self.draw_image = ImageOps.invert(Image.fromarray(noisy_image))
         self.draw = ImageDraw.Draw(self.draw_image)
 
         # updating canvas
         self.canvas.delete("all")
-        img = ImageOps.invert(self.draw_image)
-        self.noisy_image_tk = ImageTk.PhotoImage(img)
+        self.noisy_image_tk = ImageTk.PhotoImage(self.draw_image)
         self.canvas.create_image(0, 0, anchor= 'nw', image= self.noisy_image_tk)
         self.canvas.update()
         self.update()
