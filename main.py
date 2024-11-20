@@ -2,23 +2,21 @@ import customtkinter as ctk
 import os
 from PIL import ImageTk
 import tensorflow as tf
-import pandas as pd
+import matplotlib.pyplot as plt
+import sys
 from GUI.draw_frame import DrawFrame
 from GUI.metrics_frame import MetricsFrame
 from GUI.statusbar import StatusBar
-from utils.common import button_kwargs, button_grid_kwargs, NDArrayFloat
+from utils.common import NDArrayFloat
 
 
 class MainWindow(ctk.CTk):
     def __init__(self) -> None:
         super().__init__()
-
-        self.current_probabilities: NDArrayFloat | None = None
-
         # setting some basic things
         ctk.set_appearance_mode('light')
 
-        self.geometry('1300x600')
+        self.geometry('1366x768')
         self.title('Hand Written Digit Recognition')
 
         self.imagepath = ImageTk.PhotoImage(file= os.path.join('icons', 'app.png'))
@@ -29,7 +27,7 @@ class MainWindow(ctk.CTk):
         self.model = tf.keras.models.load_model('kaggle/working/handwritten_digit_rec.keras')
 
         # status bar
-        self.statusbar: ctk.CTkFrame = StatusBar(
+        self.statusbar = StatusBar(
             self,
             height= 30,
             corner_radius= 15
@@ -42,7 +40,7 @@ class MainWindow(ctk.CTk):
         )
 
         # this frame would contain all the graphs and other stuffs.
-        self.metrics_frame: ctk.CTkScrollableFrame = MetricsFrame(
+        self.metrics_frame = MetricsFrame(
             self, 
             corner_radius= 15
         )
@@ -56,7 +54,7 @@ class MainWindow(ctk.CTk):
         )
 
         # this frame would contain drawing area and buttons
-        self.draw_frame: ctk.CTkFrame = DrawFrame(
+        self.draw_frame = DrawFrame(
             self,
             width= 320,
             corner_radius= 15
@@ -69,56 +67,39 @@ class MainWindow(ctk.CTk):
             padx= 7
         )
 
-        # predict button
-        self.predict_button = ctk.CTkButton(
-            self.draw_frame, 
-            **button_kwargs,
-            text= 'Predict', 
-            command= self.predict)
-        self.predict_button.grid(
-            row= 2, 
-            **button_grid_kwargs
-        )
+        # configuring draw_frame
+        self.draw_frame.clear_button.configure(command= self.clear)
+        self.draw_frame.predict_button.configure(command= self.predict)
 
-        # clear button
-        self.clear_button = ctk.CTkButton(
-            self.draw_frame, 
-            **button_kwargs,
-            text= 'Clear', 
-            command= self.draw_frame.clear_canvas
-        )
-        self.clear_button.grid(
-            row= 3, 
-            **button_grid_kwargs
-        )
+        # Bind the close event to the on_closing function
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
 
-        # Import Button
-        self.import_button = ctk.CTkButton(
-            self.draw_frame, 
-            **button_kwargs,
-            text= 'Import', 
-            command= ...)
-        self.import_button.grid(
-            row= 5, 
-            **button_grid_kwargs
-        )
-
-        # Export Button
-        self.export_button = ctk.CTkButton(
-            self.draw_frame, 
-            **button_kwargs,
-            text= 'Export', 
-            command= ...)
-        self.export_button.grid(
-            row= 6, 
-            **button_grid_kwargs
-        )
 
     def predict(self) -> None:
+        # processing digit
         np_img = self.draw_frame.process_digit()
-        self.current_probabilities = self.model.predict(np_img)[0]
-        print(self.current_probabilities.argmax())
-        print(self.current_probabilities.round(2) * 100)
+
+        # predicting
+        probas: NDArrayFloat = self.model.predict(np_img)[0]
+
+        # setting attributes of MetricsFrame class
+        self.metrics_frame.original_image = self.draw_frame.draw_image
+        self.metrics_frame.resized_image = np_img
+        self.metrics_frame.probabilities = probas
+        self.metrics_frame.prediction = probas.argmax()
+
+        self.metrics_frame.update_all()
+
+
+    def clear(self) -> None:
+        self.draw_frame.clear_canvas()
+        self.metrics_frame.clear_prediction()
+
+
+    def on_closing(self):
+        plt.close("all")   # Close any Matplotlib figures
+        self.destroy()     # Destroy the Tkinter window
+        sys.exit()         # Exit the program completely
         
 
 if __name__ == '__main__':

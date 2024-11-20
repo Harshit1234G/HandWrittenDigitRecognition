@@ -46,3 +46,8 @@ def create_canvas_and_line(
     canvas_widget.grid(row= row, column= column, pady= (0, 10))
 
     canvas_widget.create_line(*coordinates, fill= grey_color)
+
+
+def clear_widgets(master: ctk.CTkFrame) -> None:
+    for widget in master.winfo_children():
+        widget.destroy()

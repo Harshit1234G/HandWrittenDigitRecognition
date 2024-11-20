@@ -45,13 +45,66 @@ class DrawFrame(ctk.CTkFrame):
         # binding mouse movement
         self.canvas.bind('<B1-Motion>', self.draw_digit)
 
+        # setting default layouts
+        self.default_draw_frame_layout()
+
+        # for storing the original image
+        self.set_original_image()
+
+    
+    def default_draw_frame_layout(self) -> None:
+        # predict button
+        self.predict_button = ctk.CTkButton(
+            self, 
+            **common.button_kwargs,
+            text= 'Predict',
+            state= 'disabled'
+            )
+        self.predict_button.grid(
+            row= 2,
+            **common.button_grid_kwargs
+        )
+
+        # clear button
+        self.clear_button = ctk.CTkButton(
+            self, 
+            **common.button_kwargs,
+            text= 'Clear'
+        )
+        self.clear_button.grid(
+            row= 3, 
+            **common.button_grid_kwargs
+        )
+
         common.create_canvas_and_line(self, row= 4)
+
+        # Import Button
+        self.import_button = ctk.CTkButton(
+            self, 
+            **common.button_kwargs,
+            text= 'Import'
+            )
+        self.import_button.grid(
+            row= 5, 
+            **common.button_grid_kwargs
+        )
+
+        # Export Button
+        self.export_button = ctk.CTkButton(
+            self, 
+            **common.button_kwargs,
+            text= 'Export'
+            )
+        self.export_button.grid(
+            row= 6, 
+            **common.button_grid_kwargs
+        )
         
+        common.create_canvas_and_line(self, row= 7)
+
         # text variables
         self.noise_var = ctk.DoubleVar(self, value= 0.0)
         self.pensize_var = ctk.IntVar(self, value= 10)
-
-        common.create_canvas_and_line(self, row= 7)
 
         # noise slider
         self.noise_slider = self.create_slider_frame(
@@ -83,9 +136,6 @@ class DrawFrame(ctk.CTkFrame):
             pady= (0, 10),
             sticky= 'nsew'
         )
-
-        # for storing the original image
-        self.set_original_image()
         
 
     def draw_digit(self, event: any) -> None:
@@ -103,6 +153,7 @@ class DrawFrame(ctk.CTkFrame):
         )
 
         self.set_original_image()
+        self.predict_button.configure(state= 'normal')
 
 
     def clear_canvas(self) -> None:
@@ -116,6 +167,7 @@ class DrawFrame(ctk.CTkFrame):
         self.noise_var.set(0.0)
         self.noise_is_added = False
         self.update()
+        self.predict_button.configure(state= 'disabled')
 
 
     def process_digit(self) -> common.NDArrayFloat:
@@ -151,7 +203,7 @@ class DrawFrame(ctk.CTkFrame):
             text= label,
             text_color= common.grey_color,
             anchor= 'w',
-            font= ('sans serif', 12)
+            font= (common.font, 12)
         ).grid(row= 0, column= 0, padx= 5, pady= 5, sticky= 'w')
 
         slider = ctk.CTkSlider(
