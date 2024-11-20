@@ -15,21 +15,18 @@ class MetricsFrame(ctk.CTkFrame):
 
         # data variables
         self.original_image: common.NDArrayFloat | None = None
-        self.resized_image: common.NDArrayFloat | None = None
         self.probabilities: common.NDArrayFloat | None = None
         self.prediction: int | None = None
         self.history = pd.DataFrame(
             columns= [
                 'original_image', 
-                'resized_image', 
-                'prediction', 
+                'Prediction', 
                 'probabilities', 
-                'y_true',
-                'confidence',
+                'Correct Number',
+                'Confidence (%)',
                 'correctness',
                 'acc_score'
-            ],
-            index= pd.RangeIndex(start= 1, stop= 1, step= 1)
+            ]
         )
         # text variables
         self.pred_var = ctk.StringVar(value= '')
@@ -138,7 +135,10 @@ class MetricsFrame(ctk.CTkFrame):
             state= 'disabled',
             corner_radius= 5,
             height= 10,
-            border_color= common.grey_color
+            border_color= common.grey_color,
+            # input validation
+            validate= 'key',
+            validatecommand= (self.register(self.validate_input), '%P')
         )
         self.result_pred.grid(
             row= 0, 
@@ -153,8 +153,9 @@ class MetricsFrame(ctk.CTkFrame):
             self.result_frame,
             text= '|',
             font= (common.font, 24),
-            text_color= common.grey_color
-        ).grid(row= 0, column= 2, padx= (15, 0), sticky= 'w')
+            text_color= common.grey_color,
+            justify= 'left'
+        ).grid(row= 0, column= 3, padx= (15, 0), sticky= 'w')
 
         # segmented button
         self.correct_wrong_button = ctk.CTkSegmentedButton(
@@ -171,7 +172,7 @@ class MetricsFrame(ctk.CTkFrame):
         )
         self.correct_wrong_button.grid(
             row= 0,
-            column= 3,
+            column= 4,
             pady= 7,
             padx= 10,
             sticky= 'e'
@@ -185,7 +186,7 @@ class MetricsFrame(ctk.CTkFrame):
             text_color= common.grey_color,
             wraplength= 418,
             justify= 'left'
-        ).grid(row= 1, column= 0, padx= 10, columnspan= 4)
+        ).grid(row= 1, column= 0, padx= 10, columnspan= 5)
 
 
     def default_bar_frame_layout(self) -> None:
@@ -208,14 +209,119 @@ class MetricsFrame(ctk.CTkFrame):
     def default_history_frame_layout(self) -> None:
         ctk.CTkLabel(
             master= self.history_frame,
-            height= 300,
+            text_color= common.grey_color,
+            text= 'History',
+            font= (common.font, 16),
+            justify= 'left'
+        ).pack(padx= 7, pady= (7, 0), side= 'top', anchor= 'w')
+
+        # columns to display
+        self.display_columns: list[str] = [
+            'S.No.',
+            'Prediction',
+            'Correct Number',
+            'Confidence (%)'
+        ]
+
+        # setting the style for tables
+        style = ttk.Style(self.history_frame)
+        style.theme_use('default')
+
+        style.configure(
+            style= 'Custom.Treeview.Heading',
+            font= (common.font, 12, 'bold'),
+            foreground= '#ffffff',
+            background= common.fg_color
+        )
+
+        # making table
+        self.tree_view = ttk.Treeview(
+            master= self.history_frame,
+            columns= self.display_columns,
+            show= 'headings',
+            style= 'Custom.Treeview'
+        )
+
+        for column, min_width in zip(self.display_columns, [50, 90, 130, 130]):
+            self.tree_view.heading(
+                column, 
+                text= column
+            )
+            self.tree_view.column(
+                column, 
+                anchor= 'center', 
+                width= min_width, 
+                minwidth= min_width
+            )
+
+        # setting tags
+        self.tree_view.tag_configure('evenrow', background= common.table_alternate_colors[0])
+        self.tree_view.tag_configure('oddrow', background= common.table_alternate_colors[1])
+        self.tree_view.tag_configure('wrong', background= common.red_color)
+
+
+        # Add a vertical scrollbar to the frame
+        scrollbar = ttk.Scrollbar(
+            master= self.tree_view, 
+            orient= 'vertical', 
+            command= self.tree_view.yview
+        )
+        self.tree_view.configure(yscroll= scrollbar.set)
+        scrollbar.pack(side= 'right', fill= 'y')
+
+        # Pack the Treeview widget inside the CTkScrollableFrame
+        self.tree_view.pack(
+            side= 'top', 
+            padx= 7, 
+            pady= 7, 
+            fill= 'both',
+            expand= True
+        )
+
+        # setting initial label becuase no data is present
+        self.default_history_label = ctk.CTkLabel(
+            master= self.history_frame,
+            height= 250,
             text= "No predictions yet. After drawing a number and clicking 'Predict,' click 'Correct' or 'Wrong' to add it to the history.",
             image= self.info_img,
             text_color= common.grey_color,
             font= (common.font, 12),
-            wraplength= 250,
+            wraplength= 200,
             compound= 'top'
-        ).pack(anchor= 'center', padx= 20, pady= 20)
+        )
+        self.default_history_label.pack(
+            anchor= 'center', 
+            padx= 20, 
+            pady= 20
+        )
+
+        common.button_kwargs['width'] = 270
+
+        # delete row button
+        self.delete_row_button = ctk.CTkButton(
+            master= self.history_frame,
+            **common.button_kwargs,
+            text= 'Delete Row',
+            state= 'disabled'
+        )
+        self.delete_row_button.pack(
+            side= 'left',
+            anchor= 'sw',
+            padx= 7,
+            pady= (0, 7)
+        )
+        # Clear all button
+        self.clear_all_button = ctk.CTkButton(
+            master= self.history_frame,
+            **common.button_kwargs,
+            text= 'Clear All'
+        )
+        self.clear_all_button.pack(
+            side= 'right',
+            anchor= 'se',
+            padx= (0, 7),
+            pady= (0, 7)
+        )
 
 
     def bar_plot_from_proba(self) -> None:
@@ -250,10 +356,9 @@ class MetricsFrame(ctk.CTkFrame):
     def correct_wrong_callback(self, value: str) -> None:
         match value:
             case 'Correct':
-                self.append_to_history()
+                self.update_history()
 
             case 'Wrong':
-                # self.append_to_history_for_wrong()
                 self.pred_label.configure(text= 'Correct Number:')
                 self.result_pred.configure(
                     state= 'normal', 
@@ -261,66 +366,96 @@ class MetricsFrame(ctk.CTkFrame):
                 )
                 self.result_pred.focus_set()
                 self.pred_var.set('')
-                self.update()
+                self.result_frame.update()
+
+                self.result_pred.configure(width= 60)
+
+                self.submit_correct_num_button = ctk.CTkButton(
+                    master= self.result_frame,
+                    width= 50,
+                    height= 6,
+                    corner_radius= 2,
+                    fg_color= common.grey_color,
+                    hover_color= common.fg_color,
+                    text= 'Submit',
+                    font= (common.font, 12),
+                    command= self.update_history
+                )
+                self.submit_correct_num_button.grid(
+                    row= 0, 
+                    column= 2,
+                    pady= 7,
+                    padx= (0, 10),
+                    sticky= 'w'
+                )
 
         self.correct_wrong_button.configure(state= 'disabled')
         self.correct_wrong_button.set('')
         self.result_frame.update()
-        self.update_history_display()
 
     
     def append_to_history(self) -> None:
+        correct_number = int(self.pred_var.get())
         data: dict[str, any] = {
             'original_image': self.original_image,
-            'resized_image': self.resized_image,
-            'prediction': self.prediction,
+            'Prediction': self.prediction,
             'probabilities': self.probabilities,
-            'y_true': int(self.pred_var.get()),
-            'confidence': self.probabilities.max(),
-            'correctness': True
+            'Correct Number': correct_number,
+            'Confidence (%)': int(round((self.probabilities.max()), 2) * 100),
+            'correctness': self.prediction == correct_number
         }
         index: int = len(self.history.index)
 
         self.history.loc[index] = data
 
-        y_true, y_pred = self.history['y_true'], self.history['prediction']
+        y_true, y_pred = self.history['Correct Number'], self.history['Prediction']
 
         acc_score: float = accuracy_score(y_true, y_pred)
-        self.history.loc[-1, 'acc_score'] = acc_score
+        self.history.loc[index, 'acc_score'] = acc_score
 
 
+    def insert_row_to_treeview(self) -> None:
+        # deleting default message
+        if self.default_history_label.winfo_exists():
+            self.default_history_label.destroy()
 
-    def append_to_history_for_wrong(self) -> None:
-        ...
+        # taking the row
+        sr_no: int = len(self.history) 
+        row = self.history.loc[sr_no - 1, self.display_columns[1:]]
 
+        # selecting tag
+        if not self.history.loc[sr_no - 1, 'correctness']:
+            tags = ('wrong',)
 
-    def update_history_display(self) -> None:
-        # # columns to display
-        # display_columns: list[str] = [
-        #     'S.No.'
-        #     'resized_image', 
-        #     'prediction',
-        #     'y_true',
-        #     'confidence'
-        # ]
-        # # creating tree view
-        # tree_view = ttk.Treeview(
-        #     master= self.history_frame,
-        #     columns= display_columns,
-        #     show= 'headings'
-        # )
+        elif sr_no % 2 == 0:
+            tags: tuple[str] = ('evenrow')
 
-        # # adding headings
-        # for column in display_columns:
-        #     tree_view.heading(column, text= column)
-        #     tree_view.column(column, anchor= 'center', width= 100)
+        else:
+            tags = ('oddrow',)
 
-        # # adding data
-        ...
+        # inserting to table
+        self.tree_view.insert(
+            parent= '',
+            index= 'end',
+            text= '',
+            values= (sr_no, row['Prediction'], row['Correct Number'], row['Confidence (%)']),
+            tags= tags
+        )
+        self.history_frame.update()
 
-    def register_validate(self):
-        validate_cmd = (self.register(self.validate_input), '%P')
-        self.result_pred.configure(validate= 'key', validatecommand= validate_cmd)
+    def update_history(self) -> None:
+        self.append_to_history()
+        self.insert_row_to_treeview()
+
+        if hasattr(self, 'submit_correct_num_button'):
+            self.submit_correct_num_button.destroy()
+
+        self.result_pred.configure(width= 140)
+        self.result_pred.configure(
+            state= 'disabled', 
+            border_color= common.grey_color
+        )
+
 
     def validate_input(self, input_value: str) -> bool:
         if input_value.isdigit() and 0 <= int(input_value) <= 9:
@@ -340,6 +475,11 @@ class MetricsFrame(ctk.CTkFrame):
         self.pred_var.set(self.prediction)
         self.bar_plot_from_proba()
         self.correct_wrong_button.configure(state= 'normal')
+        self.pred_label.configure(text= 'Prediction:')
+        self.result_pred.configure(
+            state= 'disabled', 
+            border_color= common.grey_color
+        )
         self.update()
 
 

@@ -9,6 +9,8 @@ hover_color: str = '#aa3600'
 grey_color: str = '#6d707f'
 upper_frame_color: str = '#EBEBEB'
 font: str = 'sans serif'
+table_alternate_colors: tuple[str, str] = ('#ffe5d6', '#fffaf7')
+red_color: str = '#FF4C4C'
 
 NDArrayInt = NDArray[int_]
 NDArrayFloat = NDArray[float_]

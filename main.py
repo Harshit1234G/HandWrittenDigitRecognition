@@ -84,7 +84,6 @@ class MainWindow(ctk.CTk):
 
         # setting attributes of MetricsFrame class
         self.metrics_frame.original_image = self.draw_frame.draw_image
-        self.metrics_frame.resized_image = np_img
         self.metrics_frame.probabilities = probas
         self.metrics_frame.prediction = probas.argmax()
 

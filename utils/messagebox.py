@@ -68,7 +68,7 @@ class MessageBox(ctk.CTkToplevel):
         )
 
         self.center_window()
-        self.focus_set()
+        self.focus_force()
 
         self.bind("<Escape>", lambda _: self.destroy())
 
