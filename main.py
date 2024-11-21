@@ -71,6 +71,9 @@ class MainWindow(ctk.CTk):
         self.draw_frame.clear_button.configure(command= self.clear)
         self.draw_frame.predict_button.configure(command= self.predict)
 
+        # configuring metrics_frame
+        self.metrics_frame.load_data_button.configure(command= self.load_data_from_history)
+
         # Bind the close event to the on_closing function
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
 
@@ -93,6 +96,14 @@ class MainWindow(ctk.CTk):
     def clear(self) -> None:
         self.draw_frame.clear_canvas()
         self.metrics_frame.clear_prediction()
+
+    
+    def load_data_from_history(self) -> None:
+        # loading the selected data and updating the metrics_frame class attributes
+        self.metrics_frame.update_attributes()
+
+        # drawing the original image on canvas
+        self.draw_frame.draw_image_on_canvas(self.metrics_frame.original_image)
 
 
     def on_closing(self):

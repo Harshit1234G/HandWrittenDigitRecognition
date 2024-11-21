@@ -252,3 +252,11 @@ class DrawFrame(ctk.CTkFrame):
         self.canvas.create_image(0, 0, anchor= 'nw', image= self.noisy_image_tk)
         self.canvas.update()
         self.update()
+
+
+    def draw_image_on_canvas(self, image: Image.Image) -> None:
+        self.canvas.delete("all")
+        self.loaded_img_tk = ImageTk.PhotoImage(image)
+        self.canvas.create_image(0, 0, anchor= 'nw', image= self.loaded_img_tk)
+        self.canvas.update()
+        self.update()

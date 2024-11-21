@@ -402,17 +402,16 @@ class MetricsFrame(ctk.CTkFrame):
     
     def append_to_history(self) -> None:
         correct_number = int(self.pred_var.get())
-        data: dict[str, any] = {
-            'original_image': self.original_image,
+        index: int = len(self.history.index)
+
+        self.history.loc[index] = {
+            'original_image': self.original_image.copy(),
             'Prediction': self.prediction,
             'probabilities': self.probabilities,
             'Correct Number': correct_number,
             'Confidence (%)': int(round((self.probabilities.max()), 2) * 100),
             'correctness': self.prediction == correct_number
         }
-        index: int = len(self.history.index)
-
-        self.history.loc[index] = data
 
         y_true, y_pred = self.history['Correct Number'], self.history['Prediction']
 
@@ -497,6 +496,37 @@ class MetricsFrame(ctk.CTkFrame):
             # loading default layout again
             self.default_history_frame_layout()
             self.clear_prediction()
+
+    
+    def get_index_of_selected_row(self) -> int | None:
+        selected_item: tuple[str, ...] = self.tree_view.selection()
+        self.tree_view.selection_remove(selected_item)
+
+        if not selected_item:
+            #TODO: update statusbar
+            return None
+        
+        index: int = self.tree_view.item(selected_item)['values'][0] - 1
+        return index
+    
+
+    def update_attributes(self) -> None:
+        # getting index
+        index: int | None= self.get_index_of_selected_row()
+
+        # if nothing is selected
+        if index is None:
+            return 
+        
+        row: pd.Series = self.history.iloc[index]
+
+        # updating class attributes
+        self.original_image = row['original_image']
+        self.prediction = row['Prediction']
+        self.probabilities = row['probabilities']
+        
+        self.update_all()
+        self.correct_wrong_button.configure(state= 'disabled')
 
     
     def update_all(self) -> None:
