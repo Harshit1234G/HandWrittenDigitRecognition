@@ -77,7 +77,7 @@ class MainWindow(ctk.CTk):
 
     def predict(self) -> None:
         # processing digit
-        np_img = self.draw_frame.process_digit()
+        np_img: NDArrayFloat = self.draw_frame.process_digit()
 
         # predicting
         probas: NDArrayFloat = self.model.predict(np_img)[0]
@@ -104,3 +104,4 @@ class MainWindow(ctk.CTk):
 if __name__ == '__main__':
     app = MainWindow()
     app.mainloop()
+    
