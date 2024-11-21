@@ -225,13 +225,12 @@ class MetricsFrame(ctk.CTkFrame):
 
         # setting the style for tables
         style = ttk.Style(self.history_frame)
-        style.theme_use('default')
+        style.theme_use('xpnative')
 
         style.configure(
             style= 'Custom.Treeview.Heading',
             font= (common.font, 12, 'bold'),
-            foreground= '#ffffff',
-            background= common.fg_color
+            foreground= common.grey_color
         )
 
         # making table
