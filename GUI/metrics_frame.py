@@ -1,4 +1,5 @@
 import customtkinter as ctk
+import tkinter.messagebox as tmsg
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -294,28 +295,34 @@ class MetricsFrame(ctk.CTkFrame):
             pady= 20
         )
 
-        common.button_kwargs['width'] = 270
+        if common.button_kwargs.get('width') is not None:
+            del common.button_kwargs['width']
 
-        # delete row button
-        self.delete_row_button = ctk.CTkButton(
+        # Load data button
+        self.load_data_button = ctk.CTkButton(
             master= self.history_frame,
             **common.button_kwargs,
-            text= 'Delete Row',
-            state= 'disabled'
+            text= 'Load'
         )
-        self.delete_row_button.pack(
+        self.load_data_button.pack(
+            fill= 'x',
+            expand= True,
             side= 'left',
             anchor= 'sw',
             padx= 7,
             pady= (0, 7)
         )
+
         # Clear all button
         self.clear_all_button = ctk.CTkButton(
             master= self.history_frame,
             **common.button_kwargs,
-            text= 'Clear All'
+            text= 'Clear All Data',
+            command= self.clear_all_history
         )
         self.clear_all_button.pack(
+            fill= 'x',
+            expand= True,
             side= 'right',
             anchor= 'se',
             padx= (0, 7),
@@ -442,7 +449,12 @@ class MetricsFrame(ctk.CTkFrame):
         )
         self.history_frame.update()
 
+
     def update_history(self) -> None:
+        #TODO: update status if pred_var is empty
+        if self.pred_var.get() == '':
+            return
+        
         self.append_to_history()
         self.insert_row_to_treeview()
 
@@ -465,6 +477,26 @@ class MetricsFrame(ctk.CTkFrame):
         
         else:
             return False
+        
+
+    def clear_all_history(self) -> None:
+        if tmsg.askyesno(
+            title= 'Clear all data', 
+            message= 'All data will be permanently removed and cannot be recovered. If you think the data might be useful, consider taking a backup using the Export feature before proceeding. Do you still want to continue?',
+            icon= tmsg.WARNING
+        ):
+            # removing all widgets
+            common.clear_widgets(self.history_frame)
+
+            # removing data from attributes
+            self.history.drop(self.history.index, inplace= True)
+            self.original_image = None
+            self.probabilities = None
+            self.prediction = None
+
+            # loading default layout again
+            self.default_history_frame_layout()
+            self.clear_prediction()
 
     
     def update_all(self) -> None:
