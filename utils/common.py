@@ -31,6 +31,15 @@ button_grid_kwargs: dict[str, any] = {
     'pady': (0, 10)
 }
 
+plot_pack_kwargs: dict[str, any] = {
+    'padx': 7, 
+    'pady': 7, 
+    'side': 'left', 
+    'fill': 'both',
+    'expand': True
+}
+
+
 def create_canvas_and_line(
     master: ctk.CTkFrame, 
     row: int, 

@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.ticker import MaxNLocator
 from PIL import Image
 from tkinter import ttk
 from sklearn.metrics import accuracy_score, ConfusionMatrixDisplay
@@ -51,6 +52,7 @@ class MetricsFrame(ctk.CTkFrame):
             padx= 20,
             pady= (10, 20)
         )
+        self.all_metrics_frame.pack_propagate(False)
 
         # the frame where are the checkboxes for metrics
         self.checkbox_frame = ctk.CTkFrame(
@@ -64,6 +66,7 @@ class MetricsFrame(ctk.CTkFrame):
             fill= 'x',
             padx= 20
         )
+        self.checkbox_frame.pack_propagate(False)
 
         # history frame
         self.history_frame = ctk.CTkFrame(
@@ -117,6 +120,8 @@ class MetricsFrame(ctk.CTkFrame):
         self.default_result_frame_layout()
         self.default_bar_frame_layout()
         self.default_history_frame_layout()
+        self.default_checkbox_frame_layout()
+        self.default_all_metrics_frame_layout(num_of_pred_left= 5)
         
 
     def default_result_frame_layout(self) -> None:
@@ -330,33 +335,88 @@ class MetricsFrame(ctk.CTkFrame):
         )
 
 
-    def bar_plot_from_proba(self) -> None:
-        # removing previous plot
-        common.clear_widgets(self.bar_frame)
+    def default_checkbox_frame_layout(self) -> None:
+        ctk.CTkLabel(
+            master= self.checkbox_frame,
+            text_color= common.grey_color,
+            text= 'Metrics to display:',
+            font= (common.font, 12)
+        ).pack(padx= 7, pady= 7, side= 'left')
 
-        # Processing probabilities
-        probas: common.NDArrayInt = (self.probabilities.round(2) * 100).astype(np.uint8)
+        # default arguments for checkbox
+        cb_kwargs: dict[str, any] = {
+            'master': self.checkbox_frame,
+            'fg_color': common.fg_color,
+            'hover_color': common.hover_color,
+            'text_color': common.grey_color,
+            'font': (common.font, 12),
+            'onvalue': 'on',
+            'offvalue': 'off',
+            'corner_radius': 5
+        }
+        cb_packing_kwargs: dict[str, any] = {
+            'padx': 7,
+            'pady': 7,
+            'side': 'left',
+            'fill': 'x',
+            'expand': True
+        }
 
-        # plotting probabilities
-        fig, ax = plt.subplots(figsize= (4.05, 2.05))
-        ax.bar(
-            x= range(10),
-            height= probas,
-            color= common.fg_color,
-            edgecolor= common.grey_color
+        # textvariables
+        self.acc_score_cb_var = ctk.StringVar(value= 'on')
+        self.confidence_cb_var = ctk.StringVar(value= 'on')
+        self.confusion_matrix_cb_var = ctk.StringVar(value= 'on')
+        self.count_plot_cb_var = ctk.StringVar(value= 'on')
+
+        # checkboxes
+        self.acc_score_cb = ctk.CTkCheckBox(
+            **cb_kwargs,
+            text= 'Accuracy Trend per Prediction',
+            variable= self.acc_score_cb_var,
+            command= self.update_all_metrics
         )
-        ax.set_title('Probability Distribution')
-        ax.set_xlabel('Number')
-        ax.set_ylabel('Probability (%)')
-        ax.set_xticks(range(10))
-        ax.set_yticks(range(0, 101, 25))
+        self.acc_score_cb.pack(**cb_packing_kwargs)
 
-        fig.tight_layout()
+        self.confidence_cb = ctk.CTkCheckBox(
+            **cb_kwargs,
+            text= 'Confidence Trend per Prediction',
+            variable= self.confidence_cb_var,
+            command= self.update_all_metrics
+        )
+        self.confidence_cb.pack(**cb_packing_kwargs)
 
-        # Setting to frame
-        canvas = FigureCanvasTkAgg(fig, master= self.bar_frame)  
-        canvas.draw()
-        canvas.get_tk_widget().pack(padx= 7, pady= 7)
+        self.confusion_matrix_cb = ctk.CTkCheckBox(
+            **cb_kwargs,
+            text= 'Confusion Matrix',
+            variable= self.confusion_matrix_cb_var,
+            command= self.update_all_metrics
+        )
+        self.confusion_matrix_cb.pack(**cb_packing_kwargs)
+        
+        self.count_plot_cb = ctk.CTkCheckBox(
+            **cb_kwargs,
+            text= 'Correct V/S Wrong',
+            variable= self.count_plot_cb_var,
+            command= self.update_all_metrics
+        )
+        self.count_plot_cb.pack(**cb_packing_kwargs)
+
+
+    def default_all_metrics_frame_layout(self, num_of_pred_left: int) -> None:
+        self.default_all_metrics_label = ctk.CTkLabel(
+            master= self.all_metrics_frame,
+            height= 300,
+            text= f'A minimum of 5 predictions are required to analyze and display meaningful metrics. Currently, there are not enough predictions in the history. Please make {num_of_pred_left} more predictions to unlock this feature.',
+            image= self.info_img,
+            text_color= common.grey_color,
+            font= (common.font, 12),
+            wraplength= 400,
+            compound= 'top'
+        )
+        self.default_all_metrics_label.pack(
+            anchor= 'center', 
+            pady= 20
+        )
 
 
     def correct_wrong_callback(self, value: str) -> None:
@@ -466,6 +526,9 @@ class MetricsFrame(ctk.CTkFrame):
             border_color= common.grey_color
         )
 
+        # updating metrics 
+        self.update_all_metrics()
+
 
     def validate_input(self, input_value: str) -> bool:
         if input_value.isdigit() and 0 <= int(input_value) <= 9:
@@ -497,6 +560,9 @@ class MetricsFrame(ctk.CTkFrame):
             self.default_history_frame_layout()
             self.clear_prediction()
 
+            common.clear_widgets(self.all_metrics_frame)
+            self.default_all_metrics_frame_layout(num_of_pred_left= 5)
+
     
     def get_index_of_selected_row(self) -> int | None:
         selected_item: tuple[str, ...] = self.tree_view.selection()
@@ -527,6 +593,180 @@ class MetricsFrame(ctk.CTkFrame):
         
         self.update_all()
         self.correct_wrong_button.configure(state= 'disabled')
+
+
+    def bar_plot_from_proba(self) -> None:
+        # removing previous plot
+        common.clear_widgets(self.bar_frame)
+
+        # Processing probabilities
+        probas: common.NDArrayInt = (self.probabilities.round(2) * 100).astype(np.uint8)
+
+        # plotting probabilities
+        fig, ax = plt.subplots(figsize= (4.05, 2.05))
+        ax.bar(
+            x= range(10),
+            height= probas,
+            color= common.fg_color,
+            edgecolor= common.grey_color
+        )
+        ax.set_title('Probability Distribution')
+        ax.set_xlabel('Number')
+        ax.set_ylabel('Probability (%)')
+        ax.set_xticks(range(10))
+        ax.set_yticks(range(0, 101, 25))
+
+        fig.tight_layout()
+
+        # Setting to frame
+        canvas = FigureCanvasTkAgg(fig, master= self.bar_frame)  
+        canvas.draw()
+        canvas.get_tk_widget().pack(padx= 7, pady= 7)
+        plt.close(fig)
+
+
+    def plot_accuracy_trend(self, marker: bool) -> None:
+        # getting accuracy scores
+        acc_scores: common.NDArrayFloat = self.history['acc_score'].values
+        sr_no: common.NDArrayInt = (self.history.index + 1).values
+
+        # plotting accuracy scores
+        fig, ax = plt.subplots(figsize= (2.5, 2.5))
+
+        if marker:
+            ax.plot(sr_no, acc_scores, color= common.fg_color, marker= 'o')
+
+        else:
+            ax.plot(sr_no, acc_scores, color= common.fg_color)
+
+        ax.set_title('Accuracy Trend', fontsize= 10)
+        ax.set_xlabel('Serial Number')
+        ax.set_ylabel('Accuracy Score')
+        ax.set_yticks([0.0, 0.25, 0.50, 0.75, 1.0])
+
+        # Set the x-axis to show only integer values
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+
+        fig.tight_layout()
+
+        # Setting to frame
+        canvas = FigureCanvasTkAgg(fig, master= self.all_metrics_frame)  
+        canvas.draw()
+        canvas.get_tk_widget().pack(**common.plot_pack_kwargs)
+        plt.close(fig)
+
+
+    def plot_confidence_trend(self, marker: bool) -> None:
+        # getting confidence scores
+        confidences: common.NDArrayFloat = self.history['Confidence (%)'].values
+        sr_no: common.NDArrayInt = (self.history.index + 1).values
+
+        # plotting confidence scores
+        fig, ax = plt.subplots(figsize= (2.5, 2.5))
+
+        if marker:
+            ax.plot(sr_no, confidences, color= common.fg_color, marker= 'o')
+
+        else:
+            ax.plot(sr_no, confidences, color= common.fg_color)
+
+        ax.set_title('Confidence Trend', fontsize= 10)
+        ax.set_xlabel('Serial Number')
+        ax.set_ylabel('Confidence (%)')
+        ax.set_yticks([0, 25, 50, 75, 100])
+
+        # Set the x-axis to show only integer values
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+
+        fig.tight_layout()
+
+        # Setting to frame
+        canvas = FigureCanvasTkAgg(fig, master= self.all_metrics_frame)  
+        canvas.draw()
+        canvas.get_tk_widget().pack(**common.plot_pack_kwargs)
+        plt.close(fig)
+
+    
+    def plot_confusion_matrix(self) -> None:
+        # getting y_pred and y_true
+        y_pred: common.NDArrayInt = self.history['Prediction']
+        y_true: common.NDArrayInt = self.history['Correct Number']
+
+        # orange colormap
+        orange_cmap = plt.get_cmap('Oranges')
+
+        # plotting confusion matrix
+        fig, ax = plt.subplots(figsize= (2.5, 2.5))
+
+        ConfusionMatrixDisplay.from_predictions(
+            y_true= y_true,
+            y_pred= y_pred,
+            ax= ax,
+            cmap= orange_cmap,
+            colorbar= False,
+            labels= list(range(10))
+        )
+
+        ax.set_title('Confusion Matrix', fontsize= 10)
+
+        fig.tight_layout()
+
+        # Setting to frame
+        canvas = FigureCanvasTkAgg(fig, master= self.all_metrics_frame)  
+        canvas.draw()
+        canvas.get_tk_widget().pack(**common.plot_pack_kwargs)
+        plt.close(fig)
+
+
+    def count_plot(self) -> None:
+        correctness_counts = self.history['correctness'].value_counts()
+
+        # bar plot
+        fig, ax = plt.subplots(figsize= (2.5, 2.5))
+        ax.bar(
+            x= ['Correct', 'Wrong'],
+            height= [correctness_counts.get(True, 0), correctness_counts.get(False, 0)],
+            color= common.fg_color,
+            edgecolor= common.grey_color,
+            width= 0.3
+        )
+
+        ax.set_title('Countplot', fontsize= 10)
+        ax.set_ylim(0, max(correctness_counts) + 1)
+
+        fig.tight_layout()
+
+        # Setting to frame
+        canvas = FigureCanvasTkAgg(fig, master= self.all_metrics_frame)  
+        canvas.draw()
+        canvas.get_tk_widget().pack(**common.plot_pack_kwargs)
+        plt.close(fig)
+
+
+    def update_all_metrics(self) -> None:
+        num_of_pred_left: int = 5 - len(self.history)
+        common.clear_widgets(self.all_metrics_frame)
+
+        # returning if not enough data
+        if num_of_pred_left > 0:
+            self.default_all_metrics_frame_layout(num_of_pred_left)
+            return None
+
+        # setting up marker requirement
+        marker_needed: bool = len(self.history) < 15
+
+        # making plots according to selected checkboxes
+        if self.acc_score_cb_var.get() == 'on':
+            self.plot_accuracy_trend(marker= marker_needed)
+
+        if self.confidence_cb_var.get() == 'on':
+            self.plot_confidence_trend(marker= marker_needed)
+
+        if self.confusion_matrix_cb_var.get() == 'on':
+            self.plot_confusion_matrix()
+
+        if self.count_plot_cb_var.get() == 'on':
+            self.count_plot()
 
     
     def update_all(self) -> None:
