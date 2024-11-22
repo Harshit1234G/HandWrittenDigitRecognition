@@ -1,5 +1,4 @@
 import customtkinter as ctk
-import os
 from PIL import ImageTk
 import tensorflow as tf
 import matplotlib.pyplot as plt
@@ -19,7 +18,7 @@ class MainWindow(ctk.CTk):
         self.geometry('1366x768')
         self.title('Hand Written Digit Recognition')
 
-        self.imagepath = ImageTk.PhotoImage(file= os.path.join('icons', 'app.png'))
+        self.imagepath = ImageTk.PhotoImage(file= 'icons/app.png')
         self.wm_iconbitmap()
         self.iconphoto(False, self.imagepath)
 

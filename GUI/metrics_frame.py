@@ -643,6 +643,7 @@ class MetricsFrame(ctk.CTkFrame):
         ax.set_xlabel('Serial Number')
         ax.set_ylabel('Accuracy Score')
         ax.set_yticks([0.0, 0.25, 0.50, 0.75, 1.0])
+        ax.set_ylim(0, 1.1)
 
         # Set the x-axis to show only integer values
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
@@ -674,6 +675,7 @@ class MetricsFrame(ctk.CTkFrame):
         ax.set_xlabel('Serial Number')
         ax.set_ylabel('Confidence (%)')
         ax.set_yticks([0, 25, 50, 75, 100])
+        ax.set_ylim(0, 110)
 
         # Set the x-axis to show only integer values
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
