@@ -6,8 +6,15 @@ import numpy as np
 
 
 class DrawFrame(ctk.CTkFrame):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(
+            self, 
+            master: any, 
+            statusbar: ctk.CTkFrame, 
+            *args, 
+            **kwargs
+        ) -> None:
+        super().__init__(master, *args, **kwargs)
+        self.statusbar = statusbar
         self.noise_is_added: bool = False
 
         ctk.CTkLabel(
@@ -44,6 +51,10 @@ class DrawFrame(ctk.CTkFrame):
 
         # binding mouse movement
         self.canvas.bind('<B1-Motion>', self.draw_digit)
+        self.canvas.bind(
+            '<Motion>', 
+            lambda event: self.statusbar.draw_coords.update((event.x, event.y))
+        )
 
         # setting default layouts
         self.default_draw_frame_layout()
@@ -127,7 +138,8 @@ class DrawFrame(ctk.CTkFrame):
             label= 'Pen Size',
             from_= 5,
             to= 20,
-            variable= self.pensize_var
+            variable= self.pensize_var,
+            command= self.pensize_status
         )
         self.pensize_slider.grid(
             row= 9,
@@ -139,6 +151,10 @@ class DrawFrame(ctk.CTkFrame):
         
 
     def draw_digit(self, event: any) -> None:
+        # updating statubar
+        self.statusbar.draw_coords.update((event.x, event.y))
+        self.statusbar.status.update('Drawing a digit on canvas...')
+
         x, y = event.x, event.y
         pen_size: int = self.pensize_var.get()
 
@@ -168,6 +184,8 @@ class DrawFrame(ctk.CTkFrame):
         self.noise_is_added = False
         self.update()
         self.predict_button.configure(state= 'disabled')
+        # updating statubar
+        self.statusbar.noise_level.set_default()
 
 
     def process_digit(self) -> common.NDArrayFloat:
@@ -227,6 +245,9 @@ class DrawFrame(ctk.CTkFrame):
     
 
     def add_noise(self, event: any) -> None:
+        # updating statubar
+        self.statusbar.noise_level.update(f'{int(self.noise_var.get() * 100)}%')
+
         self.noise_is_added = True
 
         # getting noise level from slider
@@ -251,6 +272,7 @@ class DrawFrame(ctk.CTkFrame):
         self.noisy_image_tk = ImageTk.PhotoImage(self.draw_image)
         self.canvas.create_image(0, 0, anchor= 'nw', image= self.noisy_image_tk)
         self.canvas.update()
+        self.statusbar.status.update('Noise added')
         self.update()
 
 
@@ -260,3 +282,8 @@ class DrawFrame(ctk.CTkFrame):
         self.canvas.create_image(0, 0, anchor= 'nw', image= self.loaded_img_tk)
         self.canvas.update()
         self.update()
+
+    
+    def pensize_status(self, value: float) -> None:
+        self.statusbar.pensize.update(int(value))
+        self.statusbar.status.update('Pensize Changed')

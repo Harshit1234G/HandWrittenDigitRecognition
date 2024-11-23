@@ -12,6 +12,7 @@ from utils.common import NDArrayFloat
 class MainWindow(ctk.CTk):
     def __init__(self) -> None:
         super().__init__()
+
         # setting some basic things
         ctk.set_appearance_mode('light')
 
@@ -21,9 +22,6 @@ class MainWindow(ctk.CTk):
         self.imagepath = ImageTk.PhotoImage(file= 'icons/app.png')
         self.wm_iconbitmap()
         self.iconphoto(False, self.imagepath)
-
-        # loading model
-        self.model = tf.keras.models.load_model('kaggle/working/handwritten_digit_rec.keras')
 
         # status bar
         self.statusbar = StatusBar(
@@ -41,6 +39,7 @@ class MainWindow(ctk.CTk):
         # this frame would contain all the graphs and other stuffs.
         self.metrics_frame = MetricsFrame(
             self, 
+            statusbar= self.statusbar,
             corner_radius= 15
         )
         self.metrics_frame.pack(
@@ -55,6 +54,7 @@ class MainWindow(ctk.CTk):
         # this frame would contain drawing area and buttons
         self.draw_frame = DrawFrame(
             self,
+            statusbar= self.statusbar,
             width= 320,
             corner_radius= 15
         )
@@ -65,6 +65,8 @@ class MainWindow(ctk.CTk):
             pady= 7,
             padx= 7
         )
+        # loading model
+        self.model = tf.keras.models.load_model('kaggle/working/handwritten_digit_rec.keras')
 
         # configuring draw_frame
         self.draw_frame.clear_button.configure(command= self.clear)
@@ -76,8 +78,11 @@ class MainWindow(ctk.CTk):
         # Bind the close event to the on_closing function
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
 
+        self.statusbar.status.update('Program loaded successfully')
+
 
     def predict(self) -> None:
+        self.statusbar.status.update('Predicting...')
         # processing digit
         np_img: NDArrayFloat = self.draw_frame.process_digit()
 
@@ -90,11 +95,13 @@ class MainWindow(ctk.CTk):
         self.metrics_frame.prediction = probas.argmax()
 
         self.metrics_frame.update_all()
+        self.statusbar.status.update('Prediction completed')
 
 
     def clear(self) -> None:
         self.draw_frame.clear_canvas()
         self.metrics_frame.clear_prediction()
+        self.statusbar.status.update('Drawing canvas and current prediction is cleared')
 
     
     def load_data_from_history(self) -> None:
@@ -103,6 +110,7 @@ class MainWindow(ctk.CTk):
 
         # drawing the original image on canvas
         self.draw_frame.draw_image_on_canvas(self.metrics_frame.original_image)
+        self.statusbar.status.update('Successfully loaded the selected data')
 
 
     def on_closing(self):

@@ -12,8 +12,15 @@ import utils.common as common
 
 
 class MetricsFrame(ctk.CTkFrame):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(
+            self, 
+            master: any, 
+            statusbar: ctk.CTkFrame, 
+            *args, 
+            **kwargs
+        ) -> None:
+        super().__init__(master, *args, **kwargs)
+        self.statusbar = statusbar
 
         # data variables
         self.original_image: common.NDArrayFloat | None = None
@@ -422,9 +429,12 @@ class MetricsFrame(ctk.CTkFrame):
     def correct_wrong_callback(self, value: str) -> None:
         match value:
             case 'Correct':
+                self.statusbar.status.update("Model's prediciton was correct, appending to history...")
                 self.update_history()
 
             case 'Wrong':
+                self.statusbar.status.update("Model's prediction was wrong, waiting for user to input correct number...")
+
                 self.pred_label.configure(text= 'Correct Number:')
                 self.result_pred.configure(
                     state= 'normal', 
@@ -510,8 +520,8 @@ class MetricsFrame(ctk.CTkFrame):
 
 
     def update_history(self) -> None:
-        #TODO: update status if pred_var is empty
         if self.pred_var.get() == '':
+            self.statusbar.status.update('Please enter the correct number...')
             return
         
         self.append_to_history()
@@ -527,6 +537,7 @@ class MetricsFrame(ctk.CTkFrame):
         )
 
         # updating metrics 
+        self.statusbar.status.update('Appended the prediction to history')
         self.update_all_metrics()
 
 
@@ -535,9 +546,11 @@ class MetricsFrame(ctk.CTkFrame):
             return True
         
         elif input_value == '':  # Allow clearing the input during typing
+            self.statusbar.status.update("Model's prediction was wrong, waiting for user to input correct number...")
             return True
         
         else:
+            self.statusbar.status.update('Wrong input, please enter a valid number between 0 and 9')
             return False
         
 
@@ -563,13 +576,15 @@ class MetricsFrame(ctk.CTkFrame):
             common.clear_widgets(self.all_metrics_frame)
             self.default_all_metrics_frame_layout(num_of_pred_left= 5)
 
+            self.statusbar.status.update('All history is cleared')
+
     
     def get_index_of_selected_row(self) -> int | None:
         selected_item: tuple[str, ...] = self.tree_view.selection()
         self.tree_view.selection_remove(selected_item)
 
         if not selected_item:
-            #TODO: update statusbar
+            self.statusbar.status.update('No row is selected in history, please select a row to load it...')
             return None
         
         index: int = self.tree_view.item(selected_item)['values'][0] - 1
@@ -596,6 +611,7 @@ class MetricsFrame(ctk.CTkFrame):
 
 
     def bar_plot_from_proba(self) -> None:
+        self.statusbar.status.update('Plotting probability distribution...')
         # removing previous plot
         common.clear_widgets(self.bar_frame)
 
@@ -769,6 +785,8 @@ class MetricsFrame(ctk.CTkFrame):
 
         if self.count_plot_cb_var.get() == 'on':
             self.count_plot()
+
+        self.statusbar.status.update('Updated all metrics')
 
     
     def update_all(self) -> None:
