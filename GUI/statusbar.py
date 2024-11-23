@@ -45,7 +45,7 @@ class StatusBar(ctk.CTkFrame):
         )
 
 
-    def create_shortcut_window(self) -> None:
+    def create_shortcut_window(self, event: any = None) -> None:
         ShortcutWindow(master= self)
 
 

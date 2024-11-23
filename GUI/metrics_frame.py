@@ -8,6 +8,7 @@ from matplotlib.ticker import MaxNLocator
 from PIL import Image
 from tkinter import ttk
 from sklearn.metrics import accuracy_score, ConfusionMatrixDisplay
+from typing import Literal
 import utils.common as common
 
 
@@ -190,6 +191,8 @@ class MetricsFrame(ctk.CTkFrame):
             padx= 10,
             sticky= 'e'
         )
+
+        self.correct_wrong_button_state = 'disabled'
 
         # description label
         ctk.CTkLabel(
@@ -427,6 +430,9 @@ class MetricsFrame(ctk.CTkFrame):
 
 
     def correct_wrong_callback(self, value: str) -> None:
+        if self.correct_wrong_button_state == 'disabled':
+            return None
+        
         match value:
             case 'Correct':
                 self.statusbar.status.update("Model's prediciton was correct, appending to history...")
@@ -466,6 +472,7 @@ class MetricsFrame(ctk.CTkFrame):
                 )
 
         self.correct_wrong_button.configure(state= 'disabled')
+        self.correct_wrong_button_state = 'disabled'
         self.correct_wrong_button.set('')
         self.result_frame.update()
 
@@ -519,7 +526,7 @@ class MetricsFrame(ctk.CTkFrame):
         self.history_frame.update()
 
 
-    def update_history(self) -> None:
+    def update_history(self, event: any = None) -> None:
         if self.pred_var.get() == '':
             self.statusbar.status.update('Please enter the correct number...')
             return
@@ -554,7 +561,7 @@ class MetricsFrame(ctk.CTkFrame):
             return False
         
 
-    def clear_all_history(self) -> None:
+    def clear_all_history(self, event: any = None) -> None:
         if tmsg.askyesno(
             title= 'Clear all data', 
             message= 'All data will be permanently removed and cannot be recovered. If you think the data might be useful, consider taking a backup using the Export feature before proceeding. Do you still want to continue?',
@@ -597,7 +604,7 @@ class MetricsFrame(ctk.CTkFrame):
 
         # if nothing is selected
         if index is None:
-            return 
+            return None
         
         row: pd.Series = self.history.iloc[index]
 
@@ -608,6 +615,8 @@ class MetricsFrame(ctk.CTkFrame):
         
         self.update_all()
         self.correct_wrong_button.configure(state= 'disabled')
+        self.correct_wrong_button_state = 'disabled'
+        self.statusbar.status.update('Successfully loaded the selected data')
 
 
     def bar_plot_from_proba(self) -> None:
@@ -786,7 +795,52 @@ class MetricsFrame(ctk.CTkFrame):
         if self.count_plot_cb_var.get() == 'on':
             self.count_plot()
 
+        # if none of the checkboxes was selected
+        if (
+            self.acc_score_cb_var.get() == 'off' and
+            self.confidence_cb_var.get() == 'off' and
+            self.confusion_matrix_cb_var.get() == 'off' and
+            self.count_plot_cb_var.get() == 'off'
+        ):
+            ctk.CTkLabel(
+            master= self.all_metrics_frame,
+            height= 300,
+            text= f'No metrics are selected to display, please select atleast one metric from the above checkboxes.',
+            image= self.info_img,
+            text_color= common.grey_color,
+            font= (common.font, 12),
+            wraplength= 400,
+            compound= 'top'
+        ).pack(
+            anchor= 'center', 
+            pady= 20
+        )
+
         self.statusbar.status.update('Updated all metrics')
+
+
+    def checkbox_shortcut_callback(
+            self, 
+            name: Literal['accuracy', 'confidence', 'cm', 'count']
+        ) -> None:
+        # all stringvars
+        text_vars: dict[str, ctk.StringVar] = {
+            'accuracy': self.acc_score_cb_var,
+            'confidence': self.confidence_cb_var,
+            'cm': self.confusion_matrix_cb_var,
+            'count': self.count_plot_cb_var
+        }
+
+        # selecting the one according to name
+        selected_var = text_vars[name]
+        current_value: str = selected_var.get()
+
+        # deciding the changing value
+        changing_value: str = 'on' if current_value == 'off' else 'off'
+        selected_var.set(changing_value)
+
+        # updating metrics
+        self.update_all_metrics()
 
     
     def update_all(self) -> None:
@@ -796,6 +850,7 @@ class MetricsFrame(ctk.CTkFrame):
         self.pred_var.set(self.prediction)
         self.bar_plot_from_proba()
         self.correct_wrong_button.configure(state= 'normal')
+        self.correct_wrong_button_state = 'normal'
         self.pred_label.configure(text= 'Prediction:')
         self.result_pred.configure(
             state= 'disabled', 
@@ -810,6 +865,7 @@ class MetricsFrame(ctk.CTkFrame):
         # resetting vars and getting back to normal layout
         self.pred_var.set('')
         self.correct_wrong_button.configure(state= 'disabled')
+        self.correct_wrong_button_state = 'disabled'
         self.correct_wrong_button.set('')
         self.pred_label.configure(text= 'Prediction:')
         self.result_pred.configure(
