@@ -9,18 +9,14 @@ class ExportWindow(ctk.CTkToplevel):
 
     def __init__(self, *args, **kwargs) -> None:
         # prevent creating a new instance if one already exists
-        if ExportWindow.instance is not None:
-            if ExportWindow.instance.state() == 'iconic':  # check if minimized
-                ExportWindow.instance.deiconify()
-                
-            ExportWindow.instance.focus_set()
-            ExportWindow.instance.lift()
+        if self.already_exists():
+            self.focus_existing()
             return None
 
         super().__init__(*args, **kwargs)
 
         # save this instance
-        ExportWindow.instance = self
+        self.set_instance(self)
 
         # when the window is closed, reset the instance
         self.protocol('WM_DELETE_WINDOW', self.on_close)
@@ -42,6 +38,25 @@ class ExportWindow(ctk.CTkToplevel):
         self.after(200, self.focus_set)
 
 
+    @classmethod
+    def already_exists(cls) -> bool:
+        return cls.instance is not None
+
+
+    @classmethod
+    def set_instance(cls, instance: Self | None) -> None:
+        cls.instance = instance
+
+
+    @classmethod
+    def focus_existing(cls) -> None:
+        if cls.instance.state() == 'iconic':  # check if minimized
+            cls.instance.deiconify()
+
+        cls.instance.focus_set()
+        cls.instance.lift()
+
+
     def on_close(self):
-        ExportWindow.instance = None
+        self.set_instance(self)
         self.destroy()
