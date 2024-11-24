@@ -1,7 +1,7 @@
 import customtkinter as ctk
 from PIL import ImageTk
 from typing import Self
-from utils.common import upper_frame_color, grey_color, font
+import utils.common as common
 
 
 class ShortcutWindow(ctk.CTkToplevel):
@@ -30,7 +30,7 @@ class ShortcutWindow(ctk.CTkToplevel):
         self.title('Shortcuts Panel')
         self.resizable(False, False)
 
-        self.center_window()
+        common.center_window(toplevel_window= self)
 
         # setting icon
         icon = ImageTk.PhotoImage(file= 'icons/app.png')
@@ -40,13 +40,13 @@ class ShortcutWindow(ctk.CTkToplevel):
         # frame for all shortcuts
         self.main_frame = ctk.CTkScrollableFrame(
             master= self,
-            width= self.winfo_width() - 14,
-            height= self.winfo_height() - 14,
             corner_radius= 15
         )
         self.main_frame.pack(
             padx= 7,
-            pady= 7
+            pady= 7,
+            fill= 'both', 
+            expand= True
         )
 
         # adding shortcuts
@@ -83,20 +83,6 @@ class ShortcutWindow(ctk.CTkToplevel):
         self.after(200, self.focus_set)
 
 
-    def center_window(self) -> None:
-        self.update_idletasks()
-        screen_width = self.winfo_screenwidth()
-        screen_height = self.winfo_screenheight()
-        window_width = self.winfo_width()
-        window_height = self.winfo_height()
-
-        # calculate position to center
-        x = (screen_width // 2) - (window_width // 2)
-        y = (screen_height // 2) - (window_height // 2)
-
-        self.geometry(f"{window_width}x{window_height}+{x}+{y}")
-
-
     def on_close(self):
         ShortcutWindow.instance = None
         self.destroy()
@@ -106,17 +92,16 @@ class ShortcutWindow(ctk.CTkToplevel):
         ctk.CTkLabel(
             master= self.main_frame,
             text= heading,
-            text_color= grey_color,
-            font= (font, 16, 'bold')
+            text_color= common.grey_color,
+            font= (common.font, 16, 'bold')
         ).pack(padx= 7, pady= (7, 0), side= 'top', anchor= 'w')
 
     
     def add_shortcut(self, name: str, key: str) -> None:
         shortcut_frame = ctk.CTkFrame(
             master= self.main_frame,
-            height= 40,
             corner_radius= 5,
-            fg_color= upper_frame_color
+            fg_color= common.upper_frame_color
         )
         shortcut_frame.pack(
             padx= 7, 
@@ -129,14 +114,14 @@ class ShortcutWindow(ctk.CTkToplevel):
         ctk.CTkLabel(
             master= shortcut_frame,
             text= name,
-            text_color= grey_color,
-            font= (font, 12)
+            text_color= common.grey_color,
+            font= (common.font, 12)
         ).pack(side= 'left', padx= 7)
 
         # setting shortcut key
         ctk.CTkLabel(
             master= shortcut_frame,
             text= key,
-            text_color= grey_color,
-            font= (font, 12, 'bold')
+            text_color= common.grey_color,
+            font= (common.font, 12, 'bold')
         ).pack(side= 'right', padx= 7)

@@ -7,6 +7,7 @@ from GUI.draw_frame import DrawFrame
 from GUI.metrics_frame import MetricsFrame
 from GUI.statusbar import StatusBar
 from utils.common import NDArrayFloat
+from utils.export_top_level import ExportWindow
 
 
 class MainWindow(ctk.CTk):
@@ -72,6 +73,7 @@ class MainWindow(ctk.CTk):
         # configuring draw_frame
         self.draw_frame.clear_button.configure(command= self.clear)
         self.draw_frame.predict_button.configure(command= self.predict)
+        self.draw_frame.export_button.configure(command= self.create_export_window)
 
         # configuring metrics_frame
         self.metrics_frame.load_data_button.configure(command= self.load_data_from_history)
@@ -83,6 +85,7 @@ class MainWindow(ctk.CTk):
         # basic actions
         self.bind('<Control-p>', self.predict)
         self.bind('<Control-Delete>', self.clear)
+        self.bind('<Control-s>', self.create_export_window)
 
         # History and shortcut panel
         self.bind('<Control-Shift-L>', self.load_data_from_history)
@@ -142,6 +145,10 @@ class MainWindow(ctk.CTk):
 
         # drawing the original image on canvas
         self.draw_frame.draw_image_on_canvas(self.metrics_frame.original_image)
+
+
+    def create_export_window(self, event: any = None) -> None:
+        ExportWindow(master= self)
 
 
     def on_closing(self):
