@@ -3,11 +3,13 @@ from PIL import ImageTk
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import sys
+import tkinter.messagebox as tmsg
 from GUI.draw_frame import DrawFrame
 from GUI.metrics_frame import MetricsFrame
 from GUI.statusbar import StatusBar
 from utils.common import NDArrayFloat
-from utils.export_top_level import ExportWindow
+from utils.export import export_data
+from utils.import_ import import_data
 
 
 class MainWindow(ctk.CTk):
@@ -73,7 +75,8 @@ class MainWindow(ctk.CTk):
         # configuring draw_frame
         self.draw_frame.clear_button.configure(command= self.clear)
         self.draw_frame.predict_button.configure(command= self.predict)
-        self.draw_frame.export_button.configure(command= self.create_export_window)
+        self.draw_frame.export_button.configure(command= self.export)
+        self.draw_frame.import_button.configure(command= self.import_)
 
         # configuring metrics_frame
         self.metrics_frame.load_data_button.configure(command= self.load_data_from_history)
@@ -85,12 +88,13 @@ class MainWindow(ctk.CTk):
         # basic actions
         self.bind('<Control-p>', self.predict)
         self.bind('<Control-Delete>', self.clear)
-        self.bind('<Control-s>', self.create_export_window)
+        self.bind('<Control-s>', self.export)
+        self.bind('<Control-o>', self.import_)
+        self.bind('<Control-period>', self.statusbar.create_shortcut_window)
 
-        # History and shortcut panel
+        # History
         self.bind('<Control-Shift-L>', self.load_data_from_history)
         self.bind('<Control-Shift-T>', self.metrics_frame.clear_all_history)
-        self.bind('<Control-period>', self.statusbar.create_shortcut_window)
 
         # Metrics toggels
         self.bind('<Control-m><Key-1>', lambda _: self.metrics_frame.checkbox_shortcut_callback(name= 'accuracy'))
@@ -147,8 +151,37 @@ class MainWindow(ctk.CTk):
         self.draw_frame.draw_image_on_canvas(self.metrics_frame.original_image)
 
 
-    def create_export_window(self, event: any = None) -> None:
-        ExportWindow(master= self)
+    def export(self, event: any = None) -> None:
+        if self.metrics_frame.history.empty:
+            tmsg.showerror(
+                title= 'No data to export',
+                message= 'No predictions have been made yet. The history is empty. At least one prediction is required to export data.'
+            )
+            return None
+        
+        if error_msg := export_data(self.metrics_frame.history):
+            tmsg.showerror(
+                title= 'Error while exporting',
+                message= error_msg
+            )
+        
+
+    def import_(self, event: any = None) -> None:
+        # loading data
+        imported_data = import_data()
+
+        # if any error occurs
+        if isinstance(imported_data, str):
+            tmsg.showerror(
+                title= 'Error while importing',
+                message= imported_data
+            )
+            return None
+        
+        elif imported_data is None:
+            return None
+        
+        self.metrics_frame.append_dataframe_to_history(imported_data)
 
 
     def on_closing(self):

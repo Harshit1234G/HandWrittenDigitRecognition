@@ -62,17 +62,3 @@ def create_canvas_and_line(
 def clear_widgets(master: ctk.CTkFrame) -> None:
     for widget in master.winfo_children():
         widget.destroy()
-
-    
-def center_window(toplevel_window: ctk.CTkToplevel) -> None:
-        toplevel_window.update_idletasks()
-        screen_width = toplevel_window.winfo_screenwidth()
-        screen_height = toplevel_window.winfo_screenheight()
-        window_width = toplevel_window.winfo_width()
-        window_height = toplevel_window.winfo_height()
-
-        # calculate position to center
-        x = (screen_width // 2) - (window_width // 2)
-        y = (screen_height // 2) - (window_height // 2)
-
-        toplevel_window.geometry(f"{window_width}x{window_height}+{x}+{y}")

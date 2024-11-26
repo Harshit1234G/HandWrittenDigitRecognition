@@ -26,7 +26,7 @@ class ShortcutWindow(ctk.CTkToplevel):
         self.title('Shortcuts Panel')
         self.resizable(False, False)
 
-        common.center_window(toplevel_window= self)
+        self.center_window()
 
         # setting icon
         icon = ImageTk.PhotoImage(file= 'icons/app.png')
@@ -52,10 +52,10 @@ class ShortcutWindow(ctk.CTkToplevel):
             'Clear (clearing canvas)': 'ctrl + delete',
             'Import': 'ctrl + o',
             'Export': 'ctrl + s',
-            'History & Shortcut Panel': None,
+            'Shortcuts Panel': 'ctrl + .',
+            'History': None,
             'Clear All Data': 'ctrl + shift + T',
             'Load (from history)': 'ctrl + shift + L',
-            'Shortcuts Panel': 'ctrl + .',
             'Correction Actions': None,
             'Correct button': 'ctrl + shift + C',
             'Wrong button': 'ctrl + shift + W',
@@ -73,6 +73,9 @@ class ShortcutWindow(ctk.CTkToplevel):
 
             else:
                 self.add_shortcut(name, key)
+
+        # binding with esc
+        self.bind('<Escape>', self.on_close)
 
         # setting focus
         self.after(200, self.lift)
@@ -98,8 +101,22 @@ class ShortcutWindow(ctk.CTkToplevel):
         cls.instance.lift()
 
 
-    def on_close(self):
-        self.set_instance(self)
+    def center_window(self) -> None:
+        self.update_idletasks()
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        window_width = self.winfo_width()
+        window_height = self.winfo_height()
+
+        # calculate position to center
+        x = (screen_width // 2) - (window_width // 2)
+        y = (screen_height // 2) - (window_height // 2)
+
+        self.geometry(f"{window_width}x{window_height}+{x}+{y}")
+
+
+    def on_close(self, event: any = None):
+        self.set_instance(None)
         self.destroy()
 
     

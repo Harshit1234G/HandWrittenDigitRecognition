@@ -497,10 +497,8 @@ class MetricsFrame(ctk.CTkFrame):
 
 
     def insert_row_to_treeview(self) -> None:
-        # deleting default message
-        if self.default_history_label.winfo_exists():
-            self.default_history_label.destroy()
-
+        self.default_history_label.pack_forget()
+        
         # taking the row
         sr_no: int = len(self.history) 
         row = self.history.loc[sr_no - 1, self.display_columns[1:]]
@@ -523,7 +521,6 @@ class MetricsFrame(ctk.CTkFrame):
             values= (sr_no, row['Prediction'], row['Correct Number'], row['Confidence (%)']),
             tags= tags
         )
-        self.history_frame.update()
 
 
     def update_history(self, event: any = None) -> None:
@@ -564,26 +561,58 @@ class MetricsFrame(ctk.CTkFrame):
     def clear_all_history(self, event: any = None) -> None:
         if tmsg.askyesno(
             title= 'Clear all data', 
-            message= 'All data will be permanently removed and cannot be recovered. If you think the data might be useful, consider taking a backup using the Export feature before proceeding. Do you still want to continue?',
+            message= 'All current data in history will be permanently removed and cannot be recovered. If you think the data might be useful, consider taking a backup using the Export feature before proceeding. Do you still want to continue?',
             icon= tmsg.WARNING
         ):
-            # removing all widgets
-            common.clear_widgets(self.history_frame)
+            # removing data from treeview
+            self.clear_treeview()
 
             # removing data from attributes
             self.history.drop(self.history.index, inplace= True)
+            self.history.reset_index(drop= True, inplace= True)
             self.original_image = None
             self.probabilities = None
             self.prediction = None
 
             # loading default layout again
-            self.default_history_frame_layout()
+            self.load_data_button.pack_forget()
+            self.clear_all_button.pack_forget()
+            self.default_history_label.pack(
+                anchor= 'center', 
+                padx= 20, 
+                pady= 20
+            )
+            # setting the buttons again
+            self.load_data_button.pack(
+                fill= 'x',
+                expand= True,
+                side= 'left',
+                anchor= 'sw',
+                padx= 7,
+                pady= (0, 7)
+            )
+            self.clear_all_button.pack(
+                fill= 'x',
+                expand= True,
+                side= 'right',
+                anchor= 'se',
+                padx= (0, 7),
+                pady= (0, 7)
+            )
+
             self.clear_prediction()
 
             common.clear_widgets(self.all_metrics_frame)
             self.default_all_metrics_frame_layout(num_of_pred_left= 5)
 
             self.statusbar.status.update('All history is cleared')
+
+        
+    def clear_treeview(self):
+        # Get all items in the Treeview
+        for item in self.tree_view.get_children():
+            # Delete each item
+            self.tree_view.delete(item)
 
     
     def get_index_of_selected_row(self) -> int | None:
@@ -606,7 +635,7 @@ class MetricsFrame(ctk.CTkFrame):
         if index is None:
             return None
         
-        row: pd.Series = self.history.iloc[index]
+        row: pd.Series = self.history.loc[index]
 
         # updating class attributes
         self.original_image = row['original_image']
@@ -671,7 +700,7 @@ class MetricsFrame(ctk.CTkFrame):
         ax.set_ylim(0, 1.1)
 
         # Set the x-axis to show only integer values
-        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True, nbins= 5))
 
         fig.tight_layout()
 
@@ -703,7 +732,7 @@ class MetricsFrame(ctk.CTkFrame):
         ax.set_ylim(0, 110)
 
         # Set the x-axis to show only integer values
-        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True, nbins= 5))
 
         fig.tight_layout()
 
@@ -758,8 +787,9 @@ class MetricsFrame(ctk.CTkFrame):
             width= 0.3
         )
 
-        ax.set_title('Countplot', fontsize= 10)
+        ax.set_title('Predictions', fontsize= 10)
         ax.set_ylim(0, max(correctness_counts) + 1)
+        ax.yaxis.set_major_locator(MaxNLocator(integer=True, nbins= 5))
 
         fig.tight_layout()
 
@@ -841,6 +871,37 @@ class MetricsFrame(ctk.CTkFrame):
 
         # updating metrics
         self.update_all_metrics()
+
+
+    def append_dataframe_to_history(self, df: pd.DataFrame) -> None:
+        self.clear_all_history()
+
+        self.history = df.copy(deep= True)
+
+        # removing default label
+        self.default_history_label.pack_forget()
+
+        for index, row in df.iterrows():
+            if not self.history.loc[index, 'correctness']:
+                tags = ('wrong',)
+
+            elif (index + 1) % 2 == 0:
+                tags: tuple[str] = ('evenrow')
+
+            else:
+                tags = ('oddrow',)
+
+            # inserting to table
+            self.tree_view.insert(
+                parent= '',
+                index= 'end',
+                text= '',
+                values= (index + 1, row['Prediction'], row['Correct Number'], row['Confidence (%)']),
+                tags= tags
+            )
+
+        self.update_all_metrics()
+
 
     
     def update_all(self) -> None:
