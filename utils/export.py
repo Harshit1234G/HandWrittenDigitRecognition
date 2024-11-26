@@ -2,10 +2,11 @@ import pickle
 import numpy as np
 import os
 import pandas as pd
+from pathlib import Path
 from tkinter.filedialog import asksaveasfilename
 
 
-def export_data(data: pd.DataFrame) -> None | str:
+def export_data(data: pd.DataFrame) -> Path | str | None:
     # converting Image.Image object to np.ndarray
     data['original_image'] = data['original_image'].apply(np.array)
 
@@ -23,6 +24,8 @@ def export_data(data: pd.DataFrame) -> None | str:
     try:
         with open(file_path, 'wb') as file:
             pickle.dump(data, file)
+
+        return Path(file_path)
             
     except Exception as e:
         return e

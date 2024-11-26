@@ -558,7 +558,7 @@ class MetricsFrame(ctk.CTkFrame):
             return False
         
 
-    def clear_all_history(self, event: any = None) -> None:
+    def clear_all_history(self, event: any = None) -> bool:
         if tmsg.askyesno(
             title= 'Clear all data', 
             message= 'All current data in history will be permanently removed and cannot be recovered. If you think the data might be useful, consider taking a backup using the Export feature before proceeding. Do you still want to continue?',
@@ -606,6 +606,10 @@ class MetricsFrame(ctk.CTkFrame):
             self.default_all_metrics_frame_layout(num_of_pred_left= 5)
 
             self.statusbar.status.update('All history is cleared')
+            
+            return True
+        
+        return False
 
         
     def clear_treeview(self):
@@ -874,34 +878,33 @@ class MetricsFrame(ctk.CTkFrame):
 
 
     def append_dataframe_to_history(self, df: pd.DataFrame) -> None:
-        self.clear_all_history()
+        if self.clear_all_history():
+            self.history = df.copy(deep= True)
 
-        self.history = df.copy(deep= True)
+            # removing default label
+            self.default_history_label.pack_forget()
 
-        # removing default label
-        self.default_history_label.pack_forget()
+            for index, row in df.iterrows():
+                if not self.history.loc[index, 'correctness']:
+                    tags = ('wrong',)
 
-        for index, row in df.iterrows():
-            if not self.history.loc[index, 'correctness']:
-                tags = ('wrong',)
+                elif (index + 1) % 2 == 0:
+                    tags: tuple[str] = ('evenrow')
 
-            elif (index + 1) % 2 == 0:
-                tags: tuple[str] = ('evenrow')
+                else:
+                    tags = ('oddrow',)
 
-            else:
-                tags = ('oddrow',)
+                # inserting to table
+                self.tree_view.insert(
+                    parent= '',
+                    index= 'end',
+                    text= '',
+                    values= (index + 1, row['Prediction'], row['Correct Number'], row['Confidence (%)']),
+                    tags= tags
+                )
 
-            # inserting to table
-            self.tree_view.insert(
-                parent= '',
-                index= 'end',
-                text= '',
-                values= (index + 1, row['Prediction'], row['Correct Number'], row['Confidence (%)']),
-                tags= tags
-            )
-
-        self.update_all_metrics()
-
+            self.update_all_metrics()
+            self.statusbar.status.update('Successfully imported the data')
 
     
     def update_all(self) -> None:

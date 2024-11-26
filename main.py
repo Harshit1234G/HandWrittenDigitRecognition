@@ -4,6 +4,7 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 import sys
 import tkinter.messagebox as tmsg
+from pathlib import Path
 from GUI.draw_frame import DrawFrame
 from GUI.metrics_frame import MetricsFrame
 from GUI.statusbar import StatusBar
@@ -159,11 +160,16 @@ class MainWindow(ctk.CTk):
             )
             return None
         
-        if error_msg := export_data(self.metrics_frame.history):
+        export_status = export_data(self.metrics_frame.history)
+        
+        if isinstance(export_status, str):
             tmsg.showerror(
                 title= 'Error while exporting',
-                message= error_msg
+                message= export_status
             )
+
+        elif isinstance(export_status, Path):
+            self.statusbar.status.update(f"Successfully exported the data to '{export_status}'")
         
 
     def import_(self, event: any = None) -> None:
