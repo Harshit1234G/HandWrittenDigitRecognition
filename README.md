@@ -23,7 +23,7 @@ This is a software tool for recognizing handwritten digits using a trained Convo
 | `Pillow`             | `10.2.0`      | Used for image processing, including working with canvas images and some GUI related tasks.|
 | `customtkinter`      | `5.2.2`       | Creates an enhanced and modern-looking graphical user interface.   |
 | `sklearn`            | `1.4.0`       | Used for evaluation metrics such as confusion matrix and accuracy. |
-| `pyinstaller`        | `x.x.x`       | Converts the Python script into a standalone executable.           |
+| `pyinstaller`        | `6.4.0`       | Converts the Python script into a standalone executable.           |
 | `matplotlib`         | `3.8.2`       | For plotting all the graphs.                                       |
 | `tkinter`            | `8.6`         | For messageboxes and filedialog.                                   |
 | `pickle`             |               | For pickling data.                                                 |
