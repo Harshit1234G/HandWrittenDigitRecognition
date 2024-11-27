@@ -1,3 +1,7 @@
 __pycache__
 *.pkl
 *.exe
+build
+dist
+*.spec
+setup_script.iss
