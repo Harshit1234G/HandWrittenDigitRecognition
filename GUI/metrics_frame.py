@@ -661,7 +661,7 @@ class MetricsFrame(ctk.CTkFrame):
         probas: common.NDArrayInt = (self.probabilities.round(2) * 100).astype(np.uint8)
 
         # plotting probabilities
-        fig, ax = plt.subplots(figsize= (4.05, 2.05))
+        fig, ax = plt.subplots(figsize= (4, 2))
         ax.bar(
             x= range(10),
             height= probas,
@@ -679,7 +679,7 @@ class MetricsFrame(ctk.CTkFrame):
         # Setting to frame
         canvas = FigureCanvasTkAgg(fig, master= self.bar_frame)  
         canvas.draw()
-        canvas.get_tk_widget().pack(padx= 7, pady= 7)
+        canvas.get_tk_widget().pack(**common.plot_pack_kwargs)
         plt.close(fig)
 
 
