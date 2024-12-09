@@ -5,3 +5,4 @@ build
 dist
 *.spec
 setup_script.iss
+Documentation stuff
