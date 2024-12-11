@@ -40,15 +40,38 @@ Sample datasets are provided in the release. You can directly import these into 
 
 ---
 
-### Future Documentation
-I will create a comprehensive documentation soon, explaining:
-- The idea behind the project.
-- Implementation details, including model training and GUI development.
-- The process of creating the setup and executable file.
-- Insights and challenges faced during development.
+## Documentation
+I am thrilled to share that I have completed the detailed documentation for this project as promised. It is now available under the releases section of this repository on GitHub. The documentation serves as a comprehensive guide, covering the following concepts:
+1. **Acknowledgments**  
+   A brief mention of those who supported the project morally and intellectually.
 
-Stay tuned!
+2. **System Requirements**  
+   Detailed prerequisites for running the project, including hardware and software specifications.
 
+3. **Table of Contents**  
+   Organized structure of the documentation for ease of navigation.
+
+4. **Project Overview**  
+   An introduction to the project's objectives and its key features.
+
+5. **Convolutional Neural Networks**  
+   - Understanding human vision and the need for CNNs.  
+   - Concepts of Convolution, Fourier Transform, and their applications in image processing.  
+   - Explanation of Convolutional Layers, Filters, Feature Maps, Pooling Layers, and the LeNet-5 Architecture.  
+   - Training methodology and memory considerations for CNNs.
+
+6. **Code Explanation**  
+   Step-by-step breakdown of the CNN implementation and GUI functionalities.
+
+7. **Deployment**  
+   Instructions for creating an executable file and a setup installer for the project.
+
+8. **Future Plan**  
+   Ideas and improvements for future iterations.
+
+9. **Conclusion**  
+   Final thoughts and reflections on the project.
+   
 ---
 
 ## License
